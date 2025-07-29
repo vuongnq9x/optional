@@ -1,3 +1,5 @@
+// Package optional provides a generic Optional type that represents a value which may or may not be present.
+// It helps avoid null pointer exceptions and provides a more expressive way to handle optional values.
 package optional
 
 import (
@@ -21,6 +23,8 @@ func None[T any]() Optional[T] {
 	return Optional[T]{present: false}
 }
 
+// FromPointer creates an Optional from a pointer.
+// Returns None if the pointer is nil, or Some containing the pointed value if non-nil.
 func FromPointer[T any](ptr *T) Optional[T] {
 	if ptr == nil {
 		return None[T]()
@@ -28,6 +32,8 @@ func FromPointer[T any](ptr *T) Optional[T] {
 	return Some(*ptr)
 }
 
+// ToPointer converts the Optional to a pointer.
+// Returns nil if the Optional is empty, or a pointer to the value if present.
 func (o *Optional[T]) ToPointer() *T {
 	if !o.present {
 		return nil
@@ -53,17 +59,19 @@ func (o *Optional[T]) Get() T {
 	return o.value
 }
 
+// Equals checks if this Optional is equal to another Optional.
+// Two Optionals are equal if they are both empty or contain equal values.
 func (o *Optional[T]) Equals(other Optional[T]) bool {
 	if o.present != other.present {
 		return false
 	}
 	if !o.present {
-		return true // Cả hai đều None
+		return true
 	}
-	// Cần comparable constraint hoặc custom equality function
 	return fmt.Sprintf("%v", o.value) == fmt.Sprintf("%v", other.value)
 }
 
+// Or returns this Optional if it has a value, otherwise returns the other Optional.
 func (o *Optional[T]) Or(other Optional[T]) Optional[T] {
 	if o.present {
 		return *o
@@ -71,6 +79,7 @@ func (o *Optional[T]) Or(other Optional[T]) Optional[T] {
 	return other
 }
 
+// OrElsePanic returns the contained value if present, otherwise panics with the given message.
 func (o *Optional[T]) OrElsePanic(message string) T {
 	if !o.present {
 		panic(message)
@@ -101,6 +110,8 @@ func (o *Optional[T]) IfPresent(consumer func(T)) {
 	}
 }
 
+// IfPresentOrElse executes the given consumer function if value is present,
+// otherwise executes the runnable function.
 func (o *Optional[T]) IfPresentOrElse(consumer func(T), runnable func()) {
 	if o.present {
 		consumer(o.value)
@@ -109,6 +120,8 @@ func (o *Optional[T]) IfPresentOrElse(consumer func(T), runnable func()) {
 	}
 }
 
+// Zip combines two Optionals into a single Optional using the provided combiner function.
+// Returns None if either Optional is empty.
 func Zip[T, U, R any](opt1 Optional[T], opt2 Optional[U], combiner func(T, U) R) Optional[R] {
 	if opt1.present && opt2.present {
 		return Some(combiner(opt1.value, opt2.value))
